@@ -2,6 +2,7 @@
 // and the "house band", a small generative synth group that is Skyline FM's built-in station.
 import { bus } from './events.js';
 import { settings } from './settings.js';
+import { CATALOGUE } from './catalogue.js';
 
 export class GameAudio {
   constructor() {
@@ -13,8 +14,16 @@ export class GameAudio {
     if (this.ctx) { this.ctx.resume?.(); return; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
+    // On iPhone, game audio is silenced by the ring/silent switch unless the page
+    // says it is media playback (iOS 17+).
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch { /* not supported */ }
     const ctx = new AC();
     this.ctx = ctx;
+    // browsers suspend audio when the tab is hidden or a call comes in: wake it on return
+    const wake = () => { if (ctx.state !== 'running') ctx.resume?.().catch?.(() => {}); };
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
+    addEventListener('pointerdown', wake, true);
+    addEventListener('keydown', wake, true);
     this.master = ctx.createGain();
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -14; comp.ratio.value = 4; comp.attack.value = 0.004; comp.release.value = 0.2;
@@ -23,6 +32,7 @@ export class GameAudio {
     this.sfx = ctx.createGain(); this.sfx.gain.value = settings.sfxVolume; this.sfx.connect(this.master);
     this.music = ctx.createGain(); this.music.gain.value = settings.musicVolume; this.music.connect(this.master);
     this.duckGain = ctx.createGain(); this.duckGain.connect(this.music);   // house band → duck → music volume
+    this.voice = ctx.createGain(); this.voice.gain.value = settings.voiceVolume; this.voice.connect(this.master);
 
     // one second of noise, reused everywhere
     const len = ctx.sampleRate;
@@ -40,6 +50,7 @@ export class GameAudio {
     if (!this.ctx) return;
     this.sfx.gain.value = settings.sfxVolume;
     this.music.gain.value = settings.musicVolume;
+    this.voice.gain.value = settings.voiceVolume;
   }
 
   duck(on) {
@@ -171,9 +182,6 @@ export class GameAudio {
 }
 
 // ─────────────────────────── the house band ───────────────────────────
-const TITLES_A = ['Glass', 'Concrete', 'Paper', 'Neon', 'Quiet', 'Ninth Floor', 'Antenna', 'Parapet', 'Open', 'Slow', 'Copper', 'High', 'Borrowed', 'Static', 'Early', 'Vertical'];
-const TITLES_B = ['Horizon', 'Lullaby', 'Skyline', 'Theory', 'Sunrise', 'Shortcut', 'Weather', 'Drift', 'Signal', 'Stairwell', 'Daylight', 'Runway', 'Altitude', 'Gravity', 'Overpass', 'Momentum'];
-const ARTISTS = ['The Parapets', 'Vantage', 'Kilo Nova', 'Stairwell Choir', 'Antenna Club', 'Low Cloud', 'Mono Rail', 'Fire Escape', 'The Ledgers', 'Soft Landing', 'Upward Mobility', 'Ductwork'];
 const PROGRESSIONS = [
   [0, 5, 3, 4], [0, 3, 5, 4], [5, 3, 0, 4], [0, 4, 5, 3], [3, 4, 5, 5], [0, 0, 3, 4], [5, 4, 3, 4],
 ];
@@ -182,8 +190,17 @@ const SCALES = {
   dorian: [0, 2, 3, 5, 7, 9, 10],
   major: [0, 2, 4, 5, 7, 9, 11],
 };
-const pick = (arr) => arr[(Math.random() * arr.length) | 0];
 const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+// small seeded generator, so each record in the catalogue always sounds the same
+function seeded(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 
 export class HouseBand {
   constructor(audio) {
@@ -191,28 +208,35 @@ export class HouseBand {
     this.playing = false;
     this.timer = null;
     this.track = null;
-    this.history = [];
+    this.order = [];
+    this.lastIndex = -1;
   }
 
   get ctx() { return this.audio.ctx; }
 
   _newTrack() {
-    let title;
-    do { title = `${pick(TITLES_A)} ${pick(TITLES_B)}`; } while (this.history.includes(title));
-    this.history.push(title); if (this.history.length > 12) this.history.shift();
+    if (!this.order.length) {
+      this.order = CATALOGUE.map((_, i) => i).sort(() => Math.random() - 0.5);
+      if (this.order[this.order.length - 1] === this.lastIndex) this.order.reverse();
+    }
+    const index = this.order.pop();
+    this.lastIndex = index;
+    const r = seeded(4099 + index * 7919);
+    const pick = (arr) => arr[(r() * arr.length) | 0];
     const scaleName = pick(['minor', 'minor', 'dorian', 'major']);
     const bars = [4, 8, 8, 4, 8, 4];           // intro, A, B, break, B, outro
     const track = {
-      title, artist: pick(ARTISTS),
-      bpm: 104 + ((Math.random() * 14) | 0) * 2,
-      root: 45 + ((Math.random() * 8) | 0),     // A2..E3
+      index,
+      title: CATALOGUE[index].title, artist: CATALOGUE[index].artist,
+      bpm: 104 + ((r() * 14) | 0) * 2,
+      root: 45 + ((r() * 8) | 0),               // A2..E3
       scale: SCALES[scaleName],
       prog: pick(PROGRESSIONS),
       lead: pick(['triangle', 'square', 'sawtooth']),
-      swing: Math.random() < 0.35 ? 0.12 : 0,
+      swing: r() < 0.35 ? 0.12 : 0,
       hatPattern: pick([[1, 0, 1, 0], [1, 1, 1, 0], [1, 0, 1, 1], [1, 1, 1, 1]]),
       bassPattern: pick([[1, 0, 0, 1, 0, 0, 1, 0], [1, 0, 1, 0, 1, 0, 1, 0], [1, 0, 0, 0, 1, 0, 1, 1], [1, 1, 0, 1, 0, 1, 0, 0]]),
-      arp: Array.from({ length: 16 }, () => (Math.random() < 0.55 ? (Math.random() * 5) | 0 : -1)),
+      arp: Array.from({ length: 16 }, () => (r() < 0.55 ? (r() * 5) | 0 : -1)),
       sections: bars,
       totalBars: bars.reduce((a, b) => a + b, 0),
     };

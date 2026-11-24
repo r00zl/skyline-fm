@@ -10,6 +10,7 @@ const defaults = {
   djOn: true,
   commentaryOn: true,
   subtitles: true,
+  voiceMode: 'recorded',    // recorded | device
   voiceVolume: 1,
   musicVolume: 0.7,
   sfxVolume: 0.8,

@@ -128,7 +128,6 @@
 
       <section class="app" id="app-settings">
         <div class="app-head"><div><div class="eyebrow">Settings</div><h2>Setup</h2></div></div>
-        <label class="field"><span>Runner name (the commentator uses it)</span><input id="set-name" type="text" maxlength="18" autocomplete="off"></label>
         <label class="field"><span>Look sensitivity</span><input id="set-sens" type="range" min="0.3" max="2.5" step="0.05"></label>
         <label class="row"><span>Invert look up/down</span><input type="checkbox" id="set-invert" class="switch"></label>
         <label class="field"><span>Graphics</span>
@@ -138,11 +137,22 @@
         <label class="field"><span>House band volume</span><input id="set-music" type="range" min="0" max="1" step="0.02"></label>
         <label class="field"><span>Effects volume</span><input id="set-sfx" type="range" min="0" max="1" step="0.02"></label>
         <label class="field"><span>Voice volume</span><input id="set-voice" type="range" min="0" max="1" step="0.02"></label>
-        <label class="field"><span>Nova's voice</span><select id="set-djvoice"></select></label>
-        <label class="field"><span>Mack's voice</span><select id="set-mackvoice"></select></label>
+        <h3>Voices</h3>
+        <label class="field"><span>Mack and Nova speak with</span>
+          <select id="set-voicemode">
+            <option value="recorded">Recorded voices (natural)</option>
+            <option value="device">This device's voices</option>
+          </select>
+        </label>
+        <p class="fine" id="voice-note"></p>
+        <div id="device-voices" class="hidden">
+          <label class="field"><span>Runner name, for the commentary</span><input id="set-name" type="text" maxlength="18" autocomplete="off"></label>
+          <label class="field"><span>Nova's voice</span><select id="set-djvoice"></select></label>
+          <label class="field"><span>Mack's voice</span><select id="set-mackvoice"></select></label>
+        </div>
 
         <h3>Spotify Premium <span class="tag">optional</span></h3>
-        <p class="fine">The Spotify stations already work through Spotify's embedded player. Connecting Premium adds artist names, skip, and music that dips when the DJ talks. It needs a free client ID from the Spotify developer dashboard, with this address as its redirect URI:</p>
+        <p class="fine">The Spotify stations already work through Spotify's embedded player. Connecting Premium adds skip and music that dips when the DJ talks. It needs a free client ID from the Spotify developer dashboard, with this address as its redirect URI:</p>
         <div class="copy-row"><code id="sp-redirect"></code><button id="sp-copy" class="mini">Copy</button></div>
         <label class="field"><span>Client ID</span><input id="sp-client" type="text" autocomplete="off" spellcheck="false" placeholder="32 characters"></label>
         <div class="btn-col">
@@ -167,7 +177,6 @@
   <div class="title-card">
     <div class="brand"><b>SKYLINE</b><span>FM</span><i>98.6</i></div>
     <p class="tagline">Run the rooftops. The radio's on, and someone's calling every move you make.</p>
-    <label class="name-field"><span>Runner name</span><input id="title-name" type="text" maxlength="18" autocomplete="off" placeholder="Runner"></label>
     <button id="start" class="btn big">Start the run</button>
     <div class="controls desktop-only">
       <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> run</div>

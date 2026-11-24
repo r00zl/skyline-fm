@@ -113,11 +113,6 @@ function beginPlay() {
 
 function start() {
   if (game.state !== 'title') return;
-  const name = $('title-name').value.trim();
-  settings.name = name || settings.name || 'Runner';
-  $('set-name').value = settings.name;
-  saveSettings();
-
   audio.init();
   broadcast.voice.unlock();
   radio.powerOn();
@@ -255,8 +250,6 @@ function tick(dt) {
 
 // ───────────── UI wiring ─────────────
 $('start').addEventListener('click', start);
-$('title-name').value = settings.name === 'Runner' ? '' : settings.name;
-$('title-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') start(); });
 $('fin-again').addEventListener('click', restart);
 $('fin-phone').addEventListener('click', () => phone.open('runs'));
 $('btn-phone').addEventListener('click', () => phone.toggle());

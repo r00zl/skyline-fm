@@ -45,7 +45,7 @@ Open the phone to see the dial.
 
 ### Spotify Premium mode (optional, untested)
 
-With Premium and a Spotify developer app, the Spotify stations play through the Web Playback SDK instead of the embed. That adds artist names for the DJ, skip, and music that dips while someone is talking.
+With Premium and a Spotify developer app, the Spotify stations play through the Web Playback SDK instead of the embed. That adds skip, music that dips while someone is talking, and artist names for the DJ when you use the device voices.
 
 1. Create an app at https://developer.spotify.com/dashboard and tick **Web API** and **Web Playback SDK**.
 2. Add this exact redirect URI to it: `https://r00zl.github.io/skyline-fm/` (the phone's Setup tab shows the right address for wherever the game is hosted, with a copy button).
@@ -65,9 +65,28 @@ Two voices share the airwaves, and both are driven by what actually happens:
 - **Mack** calls the run: vaults, wall-runs, clutch ledge grabs, hard landings, combos, splits against your best, falls (and how many times you've fallen at the same spot), and the finish.
 - **Nova** is the DJ: she signs on, introduces tracks, reacts when you change station, and drops in between songs with your fall count, best combo, top speed, or just the time.
 
-Everything they say comes from the line bank in [`js/lines.js`](js/lines.js), filled in with live numbers, and is spoken with the browser's built-in speech voices (no API keys, nothing sent anywhere). Voices vary by device; you can pick them in the phone's Setup tab. If a device has no voices, subtitles still show.
+Everything they say comes from the line bank in [`js/lines.js`](js/lines.js), filled in with live numbers.
 
-To add lines, add strings to the lists in `js/lines.js`. To make them react to something new, emit an event on the bus and add a handler in `js/dj.js`.
+### The voices
+
+Mack and Nova speak with **recorded clips** in `voice/`, about 700 short MP3s made ahead of time with the open-source [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M) speech model (Apache 2.0). Nothing is generated while you play, there are no API keys, and they sound the same on every device. Lines with a live time in them ("1 minute, 12.3 seconds") are spliced together from separate clips.
+
+Two things a recording can't do: say your name (the recorded voices call you "our runner") and read out a real song title from Spotify. If you'd rather have those, switch **Setup → Voices** to "This device's voices", which uses the browser's built-in speech. Those are more robotic, especially on iPhone, where web pages only get Apple's basic voices. Any line that has no clip falls back to the device voice on its own.
+
+To change what they say:
+
+1. Edit `js/lines.js`. The comment at the top explains the `{placeholders}` and the `|` splice marks.
+2. Regenerate the clips (only new lines are generated):
+
+```sh
+pip install kokoro-onnx soundfile numpy
+# model files (about 350 MB) from https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files-v1.0
+node tools/voice-lines.mjs > lines.json
+python3 tools/make-voices.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin --lines lines.json --out build/wav
+node tools/encode-voices.mjs build/wav voice lines.json     # needs ffmpeg
+```
+
+`make-voices.py` takes `--mack` and `--nova` to try other Kokoro voices (delete `build/wav` first to redo every clip). To make them react to something new, emit an event on the bus and add a handler in `js/dj.js`.
 
 ## Run it locally
 
@@ -96,8 +115,9 @@ node test/bot.mjs            # add --verbose for the move-by-move log
 | `js/input.js` | Keyboard, mouse, touch and gamepad |
 | `js/audio.js` | Synthesised sound effects and the house band |
 | `js/radio.js`, `js/spotify.js` | Stations, the Spotify embed, and Premium sign-in and playback |
-| `js/dj.js`, `js/lines.js` | Mack and Nova: what they say and when |
+| `js/dj.js`, `js/lines.js`, `js/speech.js` | Mack and Nova: what they say and when |
+| `voice/`, `tools/` | The recorded voice clips, and the scripts that generate them |
 | `js/phone.js`, `js/hud.js` | The phone and the on-screen display |
 | `js/main.js` | Game state and the frame loop |
 
-Rendering uses [three.js](https://threejs.org/) (MIT), vendored in `vendor/`. Spotify and its playlists belong to Spotify; this project is not affiliated with them.
+Rendering uses [three.js](https://threejs.org/) (MIT), vendored in `vendor/`. The voice clips were generated with Kokoro-82M (Apache 2.0) via kokoro-onnx (MIT). Spotify and its playlists belong to Spotify; this project is not affiliated with them.

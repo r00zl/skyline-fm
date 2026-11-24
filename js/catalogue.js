@@ -1,0 +1,28 @@
+// The Skyline FM house band's records. The catalogue is fixed so that the DJ's
+// introductions can be recorded, and so a track sounds the same every time it comes round.
+export const CATALOGUE = [
+  { title: 'Glass Horizon', artist: 'The Parapets' },
+  { title: 'Concrete Lullaby', artist: 'Vantage' },
+  { title: 'Paper Skyline', artist: 'Kilo Nova' },
+  { title: 'Neon Theory', artist: 'Stairwell Choir' },
+  { title: 'Quiet Sunrise', artist: 'Antenna Club' },
+  { title: 'Ninth Floor Shortcut', artist: 'Low Cloud' },
+  { title: 'Antenna Weather', artist: 'Mono Rail' },
+  { title: 'Parapet Drift', artist: 'Fire Escape' },
+  { title: 'Open Signal', artist: 'The Ledgers' },
+  { title: 'Slow Stairwell', artist: 'Soft Landing' },
+  { title: 'Copper Daylight', artist: 'Upward Mobility' },
+  { title: 'High Runway', artist: 'Ductwork' },
+  { title: 'Borrowed Altitude', artist: 'The Parapets' },
+  { title: 'Static Gravity', artist: 'Vantage' },
+  { title: 'Early Overpass', artist: 'Kilo Nova' },
+  { title: 'Vertical Momentum', artist: 'Stairwell Choir' },
+  { title: 'Glass Stairwell', artist: 'Low Cloud' },
+  { title: 'Slow Horizon', artist: 'Fire Escape' },
+  { title: 'Copper Signal', artist: 'Antenna Club' },
+  { title: 'Open Altitude', artist: 'Soft Landing' },
+  { title: 'Neon Overpass', artist: 'Mono Rail' },
+  { title: 'Quiet Gravity', artist: 'The Ledgers' },
+  { title: 'Early Daylight', artist: 'Ductwork' },
+  { title: 'High Momentum', artist: 'Upward Mobility' },
+];

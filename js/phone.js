@@ -125,9 +125,16 @@ export class Phone {
     for (const [id, key] of [['set-djvoice', 'djVoice'], ['set-mackvoice', 'mackVoice']]) {
       $(id).addEventListener('change', (e) => {
         settings[key] = e.target.value; saveSettings();
-        this.voicebox.say({ who: key === 'djVoice' ? 'nova' : 'mack', text: key === 'djVoice' ? 'This is how Nova sounds.' : 'And this is Mack, calling the run.', ttl: 4000, priority: 2 });
+        this.voicebox.say({ who: key === 'djVoice' ? 'nova' : 'mack', text: key === 'djVoice' ? 'This is how Nova sounds on this device.' : 'And this is Mack on this device, calling the run.', ttl: 4000, priority: 2 });
       });
     }
+    const mode = $('set-voicemode');
+    mode.addEventListener('change', () => {
+      settings.voiceMode = mode.value; saveSettings();
+      this._voices();
+      // let them hear the difference straight away
+      this.voicebox.say({ who: 'mack', text: mode.value === 'recorded' ? 'Here we go!' : 'And this is Mack on this device, calling the run.', ttl: 4000, priority: 2 });
+    });
     this._voices();
 
     // Spotify Premium
@@ -147,6 +154,15 @@ export class Phone {
   }
 
   _voices() {
+    const has = this.voicebox.hasRecordings;
+    const mode = $('set-voicemode');
+    mode.querySelector('option[value="recorded"]').disabled = !has;
+    mode.value = has && settings.voiceMode !== 'device' ? 'recorded' : 'device';
+    const device = mode.value === 'device';
+    $('device-voices').classList.toggle('hidden', !device);
+    $('voice-note').textContent = device
+      ? 'Built-in voices are more robotic, but they can say your name and read out Spotify song titles.'
+      : "Recorded with natural-sounding voices. They call you \"our runner\" and don't read out Spotify song titles.";
     const list = this.voicebox.voices;
     for (const [id, key, who] of [['set-djvoice', 'djVoice', 'nova'], ['set-mackvoice', 'mackVoice', 'mack']]) {
       const sel = $(id);
