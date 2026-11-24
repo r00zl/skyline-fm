@@ -72,24 +72,25 @@ export class Radio {
     this.now = null;
     clearTimeout(this.tapTimer);
     if (!silent) this.audio.tune();
+    const premium = st.kind === 'spotify' && this.sdk && this.sdkStatus === 'ready';
+    if (st.kind === 'house') this._stopSpotify();
+    this.mode = st.kind === 'house' ? 'house' : premium ? 'sdk' : 'embed';
     bus.emit('radio:station', { station: st, prev, user });
 
     if (st.kind === 'house') {
-      this._stopSpotify();
-      this.mode = 'house';
       this.band.stop();
       this.band.start();
       this._setPlaying(true);
     } else {
       this.band.stop();
       this._setPlaying(false);
-      if (this.sdk && this.sdkStatus === 'ready') {
-        this.mode = 'sdk';
+      if (premium) {
         this.embed.pause();
         this.sdk.play(st.uri).catch((err) => {
           this.sdkMessage = err.message;
           bus.emit('toast', { text: `Spotify: ${err.message}` });
           this._useEmbed(st);
+          bus.emit('radio:premium', {});
         });
       } else {
         this._useEmbed(st);

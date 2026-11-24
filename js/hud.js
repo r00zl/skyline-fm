@@ -100,7 +100,11 @@ export class Hud {
       this.el.chipTrack.textContent = t.title ? (t.artist ? `${t.title} · ${t.artist}` : t.title) : 'Spotify';
     });
     bus.on('radio:state', (e) => document.body.classList.toggle('radio-playing', e.playing));
-    bus.on('radio:needstap', () => this.toast(this.touch ? 'Tap the radio chip, then press play on Spotify.' : 'Press Tab, then press play on the Spotify player.', 6000));
+    bus.on('radio:needstap', () => {
+      const open = document.body.classList.contains('phone-open');
+      this.toast(open ? 'Press play on the Spotify player to start the stream.'
+        : this.touch ? 'Tap the radio chip, then press play on Spotify.' : 'Press Tab, then press play on the Spotify player.', 6000);
+    });
     bus.on('radio:needlink', () => this.toast('Paste a Spotify link under Stations to use "My station".', 4000));
   }
 
