@@ -25,7 +25,10 @@ const quality = settings.quality === 'auto' ? (touch ? 'low' : 'high') : setting
 const canvas = $('view');
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  // ?nogl=1 runs everything except drawing: for testing the radio and commentary on machines without WebGL
+  renderer = params.has('nogl')
+    ? { shadowMap: {}, setPixelRatio() {}, setSize() {}, render() {} }
+    : new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 } catch (err) {
   document.querySelector('.tagline').textContent = "This browser couldn't start WebGL, which the game needs. Try another browser or turn on hardware acceleration.";
   $('start').disabled = true;

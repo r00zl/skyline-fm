@@ -278,6 +278,7 @@ input[type="range"] { accent-color: var(--accent); width: 100%; }
 
 .btn { display: block; width: 100%; padding: 13px 16px; border-radius: 14px; background: var(--accent); color: #fff; font-weight: 800; font-size: 15px; text-align: center; }
 .btn:active { transform: scale(.985); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
 .btn.ghost { background: var(--ph-card); color: var(--ph-text); }
 .btn.big { padding: 16px 18px; font-size: 17px; border-radius: 16px; }
 .btn-col { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
