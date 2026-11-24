@@ -13,6 +13,13 @@ function speakable(text) {
     .replace(/&/g, ' and ');
 }
 
+// "Song (feat. Someone) [From a Film] - 2011 Remaster" → "Song": nobody on the radio reads all that out
+function cleanTitle(title) {
+  if (!title) return title;
+  const short = title.replace(/\s*[([][^)\]]*[)\]]/g, '').replace(/\s+[-–—]\s+.*$/, '').trim();
+  return short || title;
+}
+
 export function spokenTime(sec) {
   if (sec < 60) return `${sec.toFixed(1)} seconds`;
   const m = Math.floor(sec / 60), s = sec - m * 60;
@@ -349,7 +356,7 @@ export class Broadcast {
           this.nova(NOVA.houseIntro, { track: t.title, artist: t.artist }, { p: this.tracksIntroduced <= 2 ? 1 : 0.85, ttl: 9000 });
         }, delay);
       } else {
-        const vars = { track: t.title, artist: t.artist, station: t.station };
+        const vars = { track: cleanTitle(t.title), artist: t.artist, station: t.station };
         setTimeout(() => {
           if (this.radio.now !== t) return;
           if (t.title && t.artist) this.nova(NOVA.spotifyIntroArtist, vars, { p: 0.85, ttl: 8000 });
